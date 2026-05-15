@@ -1,1 +1,3 @@
-This is a mobile-first schedule builder I made for AI Engineer Singapore. It fetches the public conference schedule, lets you filter by interests, saves selected sessions locally, exports only the sessions you choose, and includes a QR-based digital contact card builder.
+This is a mobile-first schedule builder I made for AI Engineer Singapore. It fetches the public conference schedule,
+lets you filter by interests, saves selected sessions locally, exports only the sessions you choose, and includes a
+QR-based digital contact card builder.
