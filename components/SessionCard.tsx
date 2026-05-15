@@ -181,7 +181,9 @@ export const SessionCard = memo(function SessionCard({
             <span className="font-medium text-zinc-200">Question:</span> {question}
           </p>
         </div>
-      ) : null}
-    </article>
-  );
-});
+       ) : null}
+     </article>
+   );
+ },
+ );
+SessionCard.displayName = "SessionCard";

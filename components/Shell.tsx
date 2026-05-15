@@ -103,42 +103,43 @@ export function Shell({ sessions }: { sessions: Session[] }) {
     [sessions, savedIds],
   );
 
-  const setTab = useCallback((tab: AppTab) => {
-    setActiveTab(tab);
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.hash = "";
-      url.searchParams.set("tab", tab);
-      window.history.replaceState(null, "", `${url.pathname}${url.search}`);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, []);
+   const setTab = useCallback((tab: AppTab) => {
+     setActiveTab(tab);
+     if (typeof window !== "undefined") {
+       const url = new URL(window.location.href);
+       url.hash = "";
+       url.searchParams.set("tab", tab);
+       window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+       window.scrollTo({ top: 0, behavior: "smooth" });
+     }
+   }, []);
 
-  const showCopied = useCallback((message: string) => {
-    setCopied(message);
-    window.setTimeout(() => setCopied(null), 1600);
-  }, []);
+   const showCopied = useCallback((message: string) => {
+     setCopied(message);
+     const timeout = window.setTimeout(() => setCopied(null), 1600);
+     return () => clearTimeout(timeout);
+   }, []);
 
-  const toggleInterest = useCallback((interest: InterestKey) => {
-    setSelectedInterests((current) =>
-      current.includes(interest) ? current.filter((item) => item !== interest) : [...current, interest],
-    );
-  }, []);
+   const toggleInterest = useCallback((interest: InterestKey) => {
+     setSelectedInterests((current) =>
+       current.includes(interest) ? current.filter((item) => item !== interest) : [...current, interest],
+     );
+   }, []);
 
-  const toggleSaved = useCallback((id: string) => {
-    setSavedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-  }, []);
+   const toggleSaved = useCallback((id: string) => {
+     setSavedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+   }, []);
 
-  const clearPlan = useCallback(() => {
-    setSavedIds([]);
-    setExportSelectedIds([]);
-  }, []);
+   const clearPlan = useCallback(() => {
+     setSavedIds([]);
+     setExportSelectedIds([]);
+   }, []);
 
-  const toggleExportSelected = useCallback((id: string) => {
-    setExportSelectedIds((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
-  }, []);
+   const toggleExportSelected = useCallback((id: string) => {
+     setExportSelectedIds((current) =>
+       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+     );
+   }, []);
 
   return (
     <main className="min-h-screen bg-signal-bg">

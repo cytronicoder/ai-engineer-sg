@@ -225,13 +225,13 @@ export function MyPlanTab({
         <div className="surface rounded-2xl p-6 text-sm text-zinc-400">
           <p>No sessions saved yet.</p>
           <p className="mt-2">Save sessions first, then export them here.</p>
-          <button
-            type="button"
-            className="focus-ring mt-4 min-h-11 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400"
-            onClick={() => onTabChange("schedule")}
-          >
-            Browse schedule
-          </button>
+           <button
+             type="button"
+             className="focus-ring mt-4 min-h-11 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400"
+             onClick={() => onTabChange("schedule")}
+           >
+             Browse schedule
+           </button>
         </div>
       ) : (
         <div className="space-y-4">
@@ -329,15 +329,15 @@ export function MyPlanTab({
                     <label
                       className={`flex items-start gap-3 ${isPast ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
-                      <input
-                        type="checkbox"
-                        className="mt-1 h-5 w-5 rounded border-zinc-700 bg-zinc-950 accent-red-500"
-                        disabled={isPast}
-                        checked={checked}
-                        onChange={() => {
-                          if (!isPast) onToggleExportSelected(session.id);
-                        }}
-                      />
+                       <input
+                         type="checkbox"
+                         className="mt-1 h-5 w-5 rounded border-zinc-700 bg-zinc-950 accent-red-500"
+                         disabled={isPast}
+                         checked={checked}
+                         onChange={() => {
+                           if (!isPast) onToggleExportSelected(session.id);
+                         }}
+                       />
                       <span className="min-w-0 flex-1">
                         <span className="block font-mono text-xs text-red-300">
                           {formatTime(session.startsAt)}

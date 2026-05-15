@@ -48,7 +48,7 @@ body {
   backdrop-filter: blur(12px);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .surface {
     backdrop-filter: none;
     background: rgba(15, 15, 15, 0.97);
@@ -138,5 +138,12 @@ body {
   background: white;
   border-radius: 1rem;
   padding: 1rem;
+}
+
+@media (max-width: 768px) {
+  nav[role="navigation"] {
+    backdrop-filter: none;
+    background: rgba(24, 24, 27, 0.98);
+  }
 }
 

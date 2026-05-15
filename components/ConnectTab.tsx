@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { ComponentType } from "react";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   type ConnectProfile,
@@ -336,28 +336,28 @@ function EditConnectView({
         style={{ background: "rgba(239, 68, 68, 0.12)", borderColor: "rgba(239, 68, 68, 0.35)" }}
       >
         <div className="space-y-4">
-          {formFields.map((field) => (
-            <FieldInput
-              key={field.key}
-              label={field.label}
-              value={profile[field.key]}
-              placeholder={field.placeholder}
-              limit={field.limit}
-              multiline={"multiline" in field && field.multiline === true}
-              onChange={(value) => onFieldChange(field.key, value)}
-            />
-          ))}
-          {linkFields.map((field) => (
-            <FieldInput
-              key={field.key}
-              label={field.label}
-              value={profile[field.key]}
-              placeholder={field.placeholder}
-              type={field.key === "email" ? "email" : "text"}
-              onChange={(value) => onFieldChange(field.key, value)}
-              onBlur={() => onLinkBlur(field.key)}
-            />
-          ))}
+           {formFields.map((field) => (
+             <FieldInput
+               key={field.key}
+               label={field.label}
+               value={profile[field.key]}
+               placeholder={field.placeholder}
+               limit={field.limit}
+               multiline={"multiline" in field && field.multiline === true}
+               onChange={(value: string) => onFieldChange(field.key, value)}
+             />
+           ))}
+           {linkFields.map((field) => (
+             <FieldInput
+               key={field.key}
+               label={field.label}
+               value={profile[field.key]}
+               placeholder={field.placeholder}
+               type={field.key === "email" ? "email" : "text"}
+               onChange={(value: string) => onFieldChange(field.key, value)}
+               onBlur={() => onLinkBlur(field.key)}
+             />
+           ))}
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-2">
@@ -426,64 +426,80 @@ function EditConnectView({
 }
 
 function LinksSection({ profile }: { profile: ConnectProfile }) {
-  const links = getVisibleLinks(profile);
-  if (links.length === 0) return null;
+   const links = useMemo(() => {
+     const items: LinkItem[] = [
+       { key: "linkedin", label: "LinkedIn", href: normalizeUrl(profile.linkedin) },
+       { key: "instagram", label: "Instagram", href: normalizeUrl(profile.instagram) },
+       { key: "twitter", label: "X", href: normalizeUrl(profile.twitter) },
+       { key: "github", label: "GitHub", href: normalizeUrl(profile.github) },
+       { key: "website", label: "Website", href: normalizeUrl(profile.website) },
+       { key: "research", label: "Research", href: normalizeUrl(profile.research) },
+     ];
 
-  return (
-    <div className="surface rounded-2xl p-4">
-      <div className="grid gap-2 sm:grid-cols-2">
-        {links.map((link) => (
-          <a
-            key={link.key}
-            href={link.href}
-            target={link.href.startsWith("mailto:") ? undefined : "_blank"}
-            rel={link.href.startsWith("mailto:") ? undefined : "noreferrer"}
-            className="focus-ring inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white transition hover:border-red-400/40 hover:bg-red-500/10"
-          >
-            {link.label}
-            <ExternalLink className="h-4 w-4 text-red-300" />
-          </a>
-        ))}
-      </div>
-    </div>
-  );
-}
+     if (isValidEmail(profile.email)) {
+       items.push({ key: "email", label: "Email", href: `mailto:${profile.email.trim()}` });
+     }
 
-function QRCard({ value }: { value: string }) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white p-4 text-center shadow-glow">
-      <QRCodeSVG value={value || " "} size={240} bgColor="#ffffff" fgColor="#050505" level="M" marginSize={4} />
-    </div>
-  );
-}
+     return items.filter((item) => item.href);
+   }, [profile]);
 
-function Avatar({ profile }: { profile: ConnectProfile }) {
-  return (
-    <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-red-300/20 bg-red-500/15 text-2xl font-semibold text-red-100 shadow-glow">
-      {initialsFromName(profile.fullName)}
-    </div>
-  );
-}
+   if (links.length === 0) return null;
 
-function FieldInput({
-  label,
-  value,
-  placeholder,
-  limit,
-  multiline = false,
-  type = "text",
-  onChange,
-  onBlur,
-}: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  limit?: number;
-  multiline?: boolean;
-  type?: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
-}) {
+   return (
+     <div className="surface rounded-2xl p-4">
+       <div className="grid gap-2 sm:grid-cols-2">
+         {links.map((link) => (
+           <a
+             key={link.key}
+             href={link.href}
+             target={link.href.startsWith("mailto:") ? undefined : "_blank"}
+             rel={link.href.startsWith("mailto:") ? undefined : "noreferrer"}
+             className="focus-ring inline-flex min-h-11 items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white transition hover:border-red-400/40 hover:bg-red-500/10"
+           >
+             {link.label}
+             <ExternalLink className="h-4 w-4 text-red-300" />
+           </a>
+         ))}
+       </div>
+     </div>
+   );
+ }
+
+const QRCard = memo(function QRCard({ value }: { value: string }) {
+   return (
+     <div className="rounded-2xl border border-white/10 bg-white p-4 text-center shadow-glow">
+       <QRCodeSVG value={value || " "} size={240} bgColor="#ffffff" fgColor="#050505" level="M" marginSize={4} />
+     </div>
+   );
+ });
+
+const Avatar = memo(function Avatar({ profile }: { profile: ConnectProfile }) {
+   return (
+     <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-red-300/20 bg-red-500/15 text-2xl font-semibold text-red-100 shadow-glow">
+       {initialsFromName(profile.fullName)}
+     </div>
+   );
+ });
+
+const FieldInput = memo(function FieldInput({
+   label,
+   value,
+   placeholder,
+   limit,
+   multiline = false,
+   type = "text",
+   onChange,
+   onBlur,
+ }: {
+   label: string;
+   value: string;
+   placeholder?: string;
+   limit?: number;
+   multiline?: boolean;
+   type?: string;
+   onChange: (value: string) => void;
+   onBlur?: () => void;
+ }) {
   const sharedClasses =
     "focus-ring mt-2 min-h-11 w-full rounded-xl border border-white/10 bg-black/[0.35] px-3 text-sm text-white placeholder:text-zinc-600";
   const shownValue = limit ? value.slice(0, limit) : value;
@@ -516,47 +532,31 @@ function FieldInput({
           placeholder={placeholder}
           className={sharedClasses}
         />
-      )}
-    </label>
-  );
-}
+       )}
+     </label>
+   );
+ });
 
-function ActionButton({
-  icon: Icon,
-  label,
-  onClick,
-  className = "",
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  onClick: () => void;
-  className?: string;
-}) {
-  return (
-    <button
-      type="button"
-      className={`focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white transition hover:border-red-400/40 hover:bg-red-500/10 ${className}`}
-      onClick={onClick}
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </button>
-  );
-}
+const ActionButton = memo(function ActionButton({
+   icon: Icon,
+   label,
+   onClick,
+   className = "",
+ }: {
+   icon: ComponentType<{ className?: string }>;
+   label: string;
+   onClick: () => void;
+   className?: string;
+ }) {
+   return (
+     <button
+       type="button"
+       className={`focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white transition hover:border-red-400/40 hover:bg-red-500/10 ${className}`}
+       onClick={onClick}
+     >
+       <Icon className="h-4 w-4" />
+       {label}
+     </button>
+   );
+  });
 
-function getVisibleLinks(profile: ConnectProfile): LinkItem[] {
-  const items: LinkItem[] = [
-    { key: "linkedin", label: "LinkedIn", href: normalizeUrl(profile.linkedin) },
-    { key: "instagram", label: "Instagram", href: normalizeUrl(profile.instagram) },
-    { key: "twitter", label: "X", href: normalizeUrl(profile.twitter) },
-    { key: "github", label: "GitHub", href: normalizeUrl(profile.github) },
-    { key: "website", label: "Website", href: normalizeUrl(profile.website) },
-    { key: "research", label: "Research", href: normalizeUrl(profile.research) },
-  ];
-
-  if (isValidEmail(profile.email)) {
-    items.push({ key: "email", label: "Email", href: `mailto:${profile.email.trim()}` });
-  }
-
-  return items.filter((item) => item.href);
-}
