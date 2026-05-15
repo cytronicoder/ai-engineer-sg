@@ -280,21 +280,21 @@ function PublicConnectView({
       </div>
 
       <div className="surface rounded-2xl p-4">
-        <div className="grid gap-2 sm:grid-cols-2">
-          <ActionButton icon={LinkIcon} label="Copy link" onClick={onCopyLink} />
-          <ActionButton icon={Share2} label="Share" onClick={onShare} />
-          <ActionButton icon={Download} label="Save contact" onClick={onSaveContact} />
-          {scannedView ? (
-            <ActionButton
-              icon={UserRound}
-              label="Create my own card"
-              onClick={onCreateOwn}
-              className="sm:col-span-2"
-            />
-          ) : (
-            <ActionButton icon={Pencil} label="Edit card" onClick={onEdit} className="sm:col-span-2" />
-          )}
-        </div>
+        {scannedView ? (
+          <div className="grid grid-cols-2 gap-2">
+            <ActionButton icon={LinkIcon} label="Copy link" onClick={onCopyLink} />
+            <ActionButton icon={Share2} label="Share" onClick={onShare} />
+            <ActionButton icon={Download} label="Save contact" onClick={onSaveContact} className="col-span-2" />
+            <ActionButton icon={UserRound} label="Create my own card" onClick={onCreateOwn} className="col-span-2" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <ActionButton icon={LinkIcon} label="Copy link" onClick={onCopyLink} />
+            <ActionButton icon={Share2} label="Share" onClick={onShare} />
+            <ActionButton icon={Download} label="Save contact" onClick={onSaveContact} />
+            <ActionButton icon={Pencil} label="Edit card" onClick={onEdit} />
+          </div>
+        )}
       </div>
     </>
   );
@@ -357,10 +357,10 @@ function EditConnectView({
           ))}
         </div>
 
-        <div className="mt-5 grid gap-2 sm:grid-cols-2">
+        <div className="mt-5 grid grid-cols-2 gap-2">
           <button
             type="button"
-            className="focus-ring min-h-11 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400 sm:col-span-2"
+            className="focus-ring min-h-11 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400 col-span-2"
             onClick={onSave}
           >
             Save
@@ -381,7 +381,7 @@ function EditConnectView({
           </button>
           <button
             type="button"
-            className="focus-ring min-h-11 rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-medium text-zinc-400 hover:border-red-400/40 sm:col-span-2"
+            className="focus-ring min-h-11 rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm font-medium text-zinc-400 hover:border-red-400/40 col-span-2"
             onClick={onClear}
           >
             Clear
@@ -532,7 +532,7 @@ function ActionButton({
   return (
     <button
       type="button"
-      className={`focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white transition hover:border-red-400/40 hover:bg-red-500/10 ${className}`}
+      className={`focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.08] px-4 py-2 text-sm font-medium text-white transition hover:border-red-400/40 hover:bg-red-500/10 ${className}`}
       onClick={onClick}
     >
       <Icon className="h-4 w-4" />

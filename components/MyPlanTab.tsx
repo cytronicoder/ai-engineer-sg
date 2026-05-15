@@ -301,10 +301,10 @@ export function MyPlanTab({
               })}
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
-                className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-40"
+                className="focus-ring flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={exportSelectedSessions.length === 0}
                 onClick={() => downloadICS("aie-pocket-schedule.ics", generateICS(exportSelectedSessions))}
               >
@@ -316,7 +316,7 @@ export function MyPlanTab({
                 label="Copy itinerary"
                 copiedLabel="Itinerary copied"
                 onCopied={onCopied}
-                className={exportSelectedSessions.length === 0 ? "pointer-events-none opacity-40" : ""}
+                className={`w-full${exportSelectedSessions.length === 0 ? " pointer-events-none opacity-40" : ""}`}
               />
             </div>
 

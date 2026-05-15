@@ -143,7 +143,7 @@ export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: Api
 
   return (
     <main className="min-h-screen bg-signal-bg">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 pb-28 pt-4 md:px-6 md:pb-8 md:pt-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-4 pb-28 pt-4 md:px-6 md:pb-20 md:pt-6">
         {activeTab === "schedule" ? (
           <section className="rounded-2xl py-2">
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -199,7 +199,7 @@ export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: Api
         {activeTab === "connect" ? <ConnectTab onCopied={showCopied} /> : null}
 
         {copied ? (
-          <div className="fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-red-400/30 bg-zinc-950/95 px-4 py-2 text-sm text-red-50 shadow-glow md:bottom-5">
+          <div className="fixed bottom-24 left-1/2 z-40 flex -translate-x-1/2 items-center gap-2 rounded-full border border-red-400/30 bg-zinc-950/95 px-4 py-2 text-sm text-red-50 shadow-glow md:bottom-20">
             <CheckCircle2 className="h-4 w-4 text-red-300" />
             {copied}
           </div>

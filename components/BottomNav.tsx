@@ -26,25 +26,27 @@ export function BottomNav({
 }) {
   return (
     <>
-      <nav className="hidden rounded-2xl border border-white/10 bg-black/30 p-1.5 md:grid md:grid-cols-3">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const active = activeTab === tab.key;
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              className={`focus-ring relative flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                active ? "bg-red-500 text-white shadow-glow" : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
-              }`}
-              onClick={() => onChange(tab.key)}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-              {tab.key === "plan" && savedCount > 0 ? <Badge count={savedCount} /> : null}
-            </button>
-          );
-        })}
+      <nav className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-white/10 bg-zinc-950/95 px-4 py-2 backdrop-blur md:block">
+        <div className="mx-auto grid max-w-5xl grid-cols-3 gap-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                className={`focus-ring relative flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                  active ? "bg-red-500 text-white shadow-glow" : "text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                }`}
+                onClick={() => onChange(tab.key)}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+                {tab.key === "plan" && savedCount > 0 ? <Badge count={savedCount} /> : null}
+              </button>
+            );
+          })}
+        </div>
       </nav>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-zinc-950/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 backdrop-blur md:hidden">
