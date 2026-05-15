@@ -27,8 +27,7 @@ function readInitialTab(): AppTab {
   const hash = window.location.hash.replace("#", "");
   const normalizedHash = normalizeTab(hash);
   if (normalizedHash) return normalizedHash;
-  const storedTab = normalizeTab(readJson(storageKeys.tab, "schedule"));
-  return storedTab ?? "schedule";
+  return "schedule";
 }
 
 export function Shell({ sessions }: { sessions: Session[] }) {
