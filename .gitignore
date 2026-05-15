@@ -141,3 +141,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Vercel and Bun
+.vercel
+bun.lockb
+
+# JetBrains IDEs
+.idea/
