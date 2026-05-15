@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FilterBar } from "@/components/FilterBar";
 import { SessionCard } from "@/components/SessionCard";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { getSessionDay, rankSessions, sortByRecommended, sortByTime } from "@/lib/ranking";
 import { isSessionArchived } from "@/lib/session-time";
 import type { AppTab, DayFilter, InterestKey, Session, SortMode } from "@/types";
@@ -15,23 +16,6 @@ function groupByDay(sessions: Session[]) {
     groups[day] = [...(groups[day] ?? []), session];
     return groups;
   }, {});
-}
-
-function searchableText(session: Session): string {
-  return [
-    session.title,
-    session.description,
-    session.room,
-    session.venue,
-    session.track,
-    session.format,
-    session.tags.join(" "),
-    session.companyNames.join(" "),
-    session.speakers.map((speaker) => [speaker.name, speaker.company, speaker.title].join(" ")).join(" "),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
 }
 
 export function ScheduleTab({
@@ -49,7 +33,6 @@ export function ScheduleTab({
   onTabChange,
 }: {
   sessions: Session[];
-  apiMode: string;
   selectedInterests: InterestKey[];
   savedIds: string[];
   dayFilter: DayFilter;
@@ -66,34 +49,80 @@ export function ScheduleTab({
   const [scheduleView, setScheduleView] = useState<ScheduleView>("active");
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
+    const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
 
-  const days = Array.from(new Set(sessions.map(getSessionDay))).sort();
-  const query = search.trim().toLowerCase();
-  const ranked = rankSessions(sessions, selectedInterests);
+  const debouncedSearch = useDebouncedValue(search, 200);
+  const debouncedQuery = debouncedSearch.trim().toLowerCase();
 
-  const filtered = ranked
-    .filter((session) => dayFilter === "all" || getSessionDay(session) === dayFilter)
-    .filter((session) => !query || searchableText(session).includes(query))
-    .filter((session) =>
-      scheduleView === "archived"
-        ? isSessionArchived(session, now)
-        : !isSessionArchived(session, now),
-    );
+  const days = useMemo(
+    () => Array.from(new Set(sessions.map(getSessionDay))).sort(),
+    [sessions],
+  );
 
-  const sorted = [...filtered].sort((a, b) => {
-    if (sortMode === "time") return sortByTime(a, b);
-    if (sortMode === "saved") {
-      const aSaved = savedIds.includes(a.id) ? 1 : 0;
-      const bSaved = savedIds.includes(b.id) ? 1 : 0;
-      return bSaved - aSaved || sortByTime(a, b);
+  const searchableTextMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const session of sessions) {
+      map.set(
+        session.id,
+        [
+          session.title,
+          session.description,
+          session.room,
+          session.venue,
+          session.track,
+          session.format,
+          session.tags.join(" "),
+          session.companyNames.join(" "),
+          session.speakers
+            .map((s) => [s.name, s.company, s.title].join(" "))
+            .join(" "),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase(),
+      );
     }
-    return sortByRecommended(a, b);
-  });
+    return map;
+  }, [sessions]);
 
-  const grouped = groupByDay(sorted);
+  const ranked = useMemo(
+    () => rankSessions(sessions, selectedInterests),
+    [sessions, selectedInterests],
+  );
+
+  const filtered = useMemo(
+    () =>
+      ranked
+        .filter((s) => dayFilter === "all" || getSessionDay(s) === dayFilter)
+        .filter((s) => !debouncedQuery || (searchableTextMap.get(s.id) ?? "").includes(debouncedQuery))
+        .filter((s) =>
+          scheduleView === "archived" ? isSessionArchived(s, now) : !isSessionArchived(s, now),
+        ),
+    [ranked, dayFilter, debouncedQuery, searchableTextMap, scheduleView, now],
+  );
+
+  const sorted = useMemo(
+    () =>
+      [...filtered].sort((a, b) => {
+        if (sortMode === "time") return sortByTime(a, b);
+        if (sortMode === "saved") {
+          const aSaved = savedIds.includes(a.id) ? 1 : 0;
+          const bSaved = savedIds.includes(b.id) ? 1 : 0;
+          return bSaved - aSaved || sortByTime(a, b);
+        }
+        return sortByRecommended(a, b);
+      }),
+    [filtered, sortMode, savedIds],
+  );
+
+  const grouped = useMemo(() => groupByDay(sorted), [sorted]);
+
+  const handleToggleSaved = useCallback(
+    (id: string) => onToggleSaved(id),
+    [onToggleSaved],
+  );
 
   return (
     <section className="space-y-4 pb-24 md:pb-0">
@@ -148,9 +177,7 @@ export function ScheduleTab({
                 session={session}
                 saved={savedIds.includes(session.id)}
                 now={now}
-                onToggleSaved={() => {
-                  if (!isSessionArchived(session, now)) onToggleSaved(session.id);
-                }}
+                onToggleSaved={handleToggleSaved}
               />
             ))}
           </div>

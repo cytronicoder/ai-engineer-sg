@@ -12,6 +12,7 @@ import {
 import { QRCodeSVG } from "qrcode.react";
 import type { ComponentType } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import {
   type ConnectProfile,
   buildShareUrl,
@@ -90,8 +91,10 @@ export function ConnectTab({ onCopied }: { onCopied: (message: string) => void }
   const isSharedPublicView = Boolean(sharedProfile);
   const publicShareUrl = useMemo(() => (hydrated ? buildShareUrl(publicProfile) : ""), [hydrated, publicProfile]);
   const publicPayloadSize = useMemo(() => profileByteLength(publicProfile), [publicProfile]);
-  const draftShareUrl = useMemo(() => (hydrated ? buildShareUrl(draftProfile) : ""), [hydrated, draftProfile]);
-  const draftPayloadSize = useMemo(() => profileByteLength(draftProfile), [draftProfile]);
+
+  const debouncedDraft = useDebouncedValue(draftProfile, 300);
+  const draftShareUrl = useMemo(() => (hydrated ? buildShareUrl(debouncedDraft) : ""), [hydrated, debouncedDraft]);
+  const draftPayloadSize = useMemo(() => profileByteLength(debouncedDraft), [debouncedDraft]);
 
   const syncUrlMode = (nextMode: ConnectMode, clearPayload: boolean) => {
     const url = new URL(window.location.href);

@@ -1,23 +1,25 @@
 "use client";
 
 import { Check, Clipboard, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { getSessionStatus } from "@/lib/session-time";
 import type { Session } from "@/types";
+
+const timeFormatter = new Intl.DateTimeFormat("en-SG", {
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZone: "Asia/Singapore",
+});
 
 const formatTime = (value?: string) => {
   if (!value) return "Time TBA";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Time TBA";
-  return new Intl.DateTimeFormat("en-SG", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Singapore",
-  }).format(date);
+  return timeFormatter.format(date);
 };
 
-export function SessionCard({
+export const SessionCard = memo(function SessionCard({
   session,
   saved,
   onToggleSaved,
@@ -26,7 +28,7 @@ export function SessionCard({
 }: {
   session: Session & { matchedInterests?: string[] };
   saved: boolean;
-  onToggleSaved: () => void;
+  onToggleSaved: (id: string) => void;
   removeMode?: boolean;
   now?: Date;
 }) {
@@ -37,12 +39,24 @@ export function SessionCard({
   const isLive = status === "live";
   const isArchived = status === "archived";
 
-  const speakers =
-    session.speakers
-      .map((speaker) => [speaker.name, speaker.company || speaker.title].filter(Boolean).join(" · "))
-      .join(", ") || "Speaker TBA";
-  const location = [session.room, session.venue].filter(Boolean).join(", ");
-  const track = [session.track, session.format].filter(Boolean).join(" / ");
+  const speakers = useMemo(
+    () =>
+      session.speakers
+        .map((s) => [s.name, s.company || s.title].filter(Boolean).join(" · "))
+        .join(", ") || "Speaker TBA",
+    [session.speakers],
+  );
+
+  const location = useMemo(
+    () => [session.room, session.venue].filter(Boolean).join(", "),
+    [session.room, session.venue],
+  );
+
+  const track = useMemo(
+    () => [session.track, session.format].filter(Boolean).join(" / "),
+    [session.track, session.format],
+  );
+
   const matchedInterests = session.matchedInterests?.slice(0, 2) ?? [];
   const visibleTags = session.tags.slice(0, Math.max(0, 3 - matchedInterests.length));
   const question = `What should I ask about ${session.title}?`;
@@ -53,6 +67,8 @@ export function SessionCard({
     window.setTimeout(() => setQuestionCopied(false), 1200);
   };
 
+  const handleToggle = () => onToggleSaved(session.id);
+
   const cardClass = isLive
     ? "rounded-2xl border border-red-500/40 bg-[rgba(239,68,68,0.10)] p-4"
     : isArchived
@@ -60,7 +76,7 @@ export function SessionCard({
       : "surface rounded-2xl p-4";
 
   return (
-    <article className={cardClass}>
+    <article className={cardClass} style={{ contain: "layout" }}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -85,7 +101,7 @@ export function SessionCard({
           <button
             type="button"
             className="focus-ring inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-red-400/40 bg-red-500/[0.16] px-3 py-2 text-sm font-semibold text-red-50 transition"
-            onClick={onToggleSaved}
+            onClick={handleToggle}
           >
             <Trash2 className="h-4 w-4" />
             Remove
@@ -107,7 +123,7 @@ export function SessionCard({
                 ? "border border-red-400/40 bg-red-500/[0.16] text-red-50"
                 : "bg-red-500 text-white hover:bg-red-400"
             }`}
-            onClick={onToggleSaved}
+            onClick={handleToggle}
             aria-pressed={saved}
           >
             {saved ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
@@ -168,4 +184,4 @@ export function SessionCard({
       ) : null}
     </article>
   );
-}
+});

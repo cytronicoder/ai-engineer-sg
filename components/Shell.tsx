@@ -1,13 +1,13 @@
 "use client";
 
 import { CheckCircle2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { ConnectTab } from "@/components/ConnectTab";
 import { MyPlanTab } from "@/components/MyPlanTab";
 import { ScheduleTab } from "@/components/ScheduleTab";
 import { readJson, storageKeys, writeJson } from "@/lib/storage";
-import type { ApiMode, AppTab, DayFilter, InterestKey, Session, SortMode } from "@/types";
+import type { AppTab, DayFilter, InterestKey, Session, SortMode } from "@/types";
 
 const defaultInterests: InterestKey[] = ["agents", "coding", "evals", "infrastructure", "research"];
 const validTabs = new Set<AppTab>(["schedule", "plan", "connect"]);
@@ -31,7 +31,7 @@ function readInitialTab(): AppTab {
   return storedTab ?? "schedule";
 }
 
-export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: ApiMode }) {
+export function Shell({ sessions }: { sessions: Session[] }) {
   const [activeTab, setActiveTab] = useState<AppTab>("schedule");
   const [selectedInterests, setSelectedInterests] = useState<InterestKey[]>(defaultInterests);
   const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -104,7 +104,7 @@ export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: Api
     [sessions, savedIds],
   );
 
-  const setTab = (tab: AppTab) => {
+  const setTab = useCallback((tab: AppTab) => {
     setActiveTab(tab);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
@@ -113,33 +113,33 @@ export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: Api
       window.history.replaceState(null, "", `${url.pathname}${url.search}`);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
+  }, []);
 
-  const showCopied = (message: string) => {
+  const showCopied = useCallback((message: string) => {
     setCopied(message);
     window.setTimeout(() => setCopied(null), 1600);
-  };
+  }, []);
 
-  const toggleInterest = (interest: InterestKey) => {
+  const toggleInterest = useCallback((interest: InterestKey) => {
     setSelectedInterests((current) =>
       current.includes(interest) ? current.filter((item) => item !== interest) : [...current, interest],
     );
-  };
+  }, []);
 
-  const toggleSaved = (id: string) => {
+  const toggleSaved = useCallback((id: string) => {
     setSavedIds((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-  };
+  }, []);
 
-  const clearPlan = () => {
+  const clearPlan = useCallback(() => {
     setSavedIds([]);
     setExportSelectedIds([]);
-  };
+  }, []);
 
-  const toggleExportSelected = (id: string) => {
+  const toggleExportSelected = useCallback((id: string) => {
     setExportSelectedIds((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
     );
-  };
+  }, []);
 
   return (
     <main className="min-h-screen bg-signal-bg">
@@ -147,20 +147,20 @@ export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: Api
         {activeTab === "schedule" ? (
           <section className="rounded-2xl py-2">
             <div className="flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  className="focus-ring min-h-11 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400"
-                  onClick={() => setTab("connect")}
-                >
-                  Connect with others
-                </button>
-                <button
-                  type="button"
-                  className="focus-ring min-h-11 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white hover:border-red-400/40 hover:bg-red-500/10"
-                  onClick={() => setTab("plan")}
-                >
-                  View my plan
-                </button>
+              <button
+                type="button"
+                className="focus-ring min-h-11 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400"
+                onClick={() => setTab("connect")}
+              >
+                Connect with others
+              </button>
+              <button
+                type="button"
+                className="focus-ring min-h-11 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-white hover:border-red-400/40 hover:bg-red-500/10"
+                onClick={() => setTab("plan")}
+              >
+                View my plan
+              </button>
             </div>
           </section>
         ) : null}
@@ -168,7 +168,6 @@ export function Shell({ sessions, apiMode }: { sessions: Session[]; apiMode: Api
         {activeTab === "schedule" ? (
           <ScheduleTab
             sessions={sessions}
-            apiMode={apiMode}
             selectedInterests={selectedInterests}
             savedIds={savedIds}
             dayFilter={dayFilter}

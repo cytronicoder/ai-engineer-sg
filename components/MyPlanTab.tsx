@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Download } from "lucide-react";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { CopyButton } from "@/components/CopyButton";
 import { SessionCard } from "@/components/SessionCard";
 import { downloadICS, generateICS } from "@/lib/calendar";
@@ -75,6 +75,38 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   return <h2 className="px-1 text-sm font-semibold text-zinc-300">{children}</h2>;
 }
 
+const EMPTY_OVERLAPS: string[] = [];
+
+const SessionRow = memo(function SessionRow({
+  session,
+  overlaps,
+  now,
+  onRemove,
+}: {
+  session: Session;
+  overlaps: string[];
+  now: Date;
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <SessionCard
+        session={session}
+        saved
+        removeMode
+        now={now}
+        onToggleSaved={onRemove}
+      />
+      {overlaps.length > 0 ? (
+        <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-100">
+          Overlaps with {overlaps.slice(0, 2).join(", ")}
+          {overlaps.length > 2 ? ` +${overlaps.length - 2} more` : ""}.
+        </div>
+      ) : null}
+    </div>
+  );
+});
+
 export function MyPlanTab({
   savedSessions,
   exportSelectedIds,
@@ -97,56 +129,64 @@ export function MyPlanTab({
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30_000);
+    const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
 
-  const sorted = [...savedSessions].sort(sortByTime);
+  const sorted = useMemo(() => [...savedSessions].sort(sortByTime), [savedSessions]);
 
-  const liveSessions = sorted.filter((s) => getSessionStatus(s, now) === "live");
-  const upcomingSessions = sorted.filter((s) => {
-    const status = getSessionStatus(s, now);
-    return status === "upcoming" || status === "unknown";
-  });
-  const pastSessions = sorted.filter((s) => getSessionStatus(s, now) === "archived");
+  const liveSessions = useMemo(
+    () => sorted.filter((s) => getSessionStatus(s, now) === "live"),
+    [sorted, now],
+  );
 
-  const upcomingGrouped = groupByDay(upcomingSessions);
-  const pastGrouped = groupByDay(pastSessions);
+  const upcomingSessions = useMemo(
+    () =>
+      sorted.filter((s) => {
+        const status = getSessionStatus(s, now);
+        return status === "upcoming" || status === "unknown";
+      }),
+    [sorted, now],
+  );
 
-  const conflicts = conflictPairs(sorted);
-  const conflictLookup = conflicts.reduce<Record<string, string[]>>((acc, [a, b]) => {
-    acc[a.id] = [...(acc[a.id] ?? []), b.title];
-    acc[b.id] = [...(acc[b.id] ?? []), a.title];
-    return acc;
-  }, {});
+  const pastSessions = useMemo(
+    () => sorted.filter((s) => getSessionStatus(s, now) === "archived"),
+    [sorted, now],
+  );
 
-  const pastIds = new Set(pastSessions.map((s) => s.id));
-  const exportableSessions = sorted.filter((s) => !pastIds.has(s.id));
-  const exportSelectedSessions = exportableSessions.filter((s) => exportSelectedIds.includes(s.id));
-  const exportAllSelected =
-    exportableSessions.length > 0 && exportableSessions.every((s) => exportSelectedIds.includes(s.id));
-  const exportText = itineraryText(exportSelectedSessions);
+  const upcomingGrouped = useMemo(() => groupByDay(upcomingSessions), [upcomingSessions]);
+  const pastGrouped = useMemo(() => groupByDay(pastSessions), [pastSessions]);
 
-  function renderSessionWithConflict(session: Session) {
-    const overlaps = conflictLookup[session.id] ?? [];
-    return (
-      <div key={session.id} className="space-y-2">
-        <SessionCard
-          session={session}
-          saved
-          removeMode
-          now={now}
-          onToggleSaved={() => onRemove(session.id)}
-        />
-        {overlaps.length > 0 ? (
-          <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-100">
-            Overlaps with {overlaps.slice(0, 2).join(", ")}
-            {overlaps.length > 2 ? ` +${overlaps.length - 2} more` : ""}.
-          </div>
-        ) : null}
-      </div>
-    );
-  }
+  const conflicts = useMemo(() => conflictPairs(sorted), [sorted]);
+
+  const conflictLookup = useMemo(
+    () =>
+      conflicts.reduce<Record<string, string[]>>((acc, [a, b]) => {
+        acc[a.id] = [...(acc[a.id] ?? []), b.title];
+        acc[b.id] = [...(acc[b.id] ?? []), a.title];
+        return acc;
+      }, {}),
+    [conflicts],
+  );
+
+  const pastIds = useMemo(() => new Set(pastSessions.map((s) => s.id)), [pastSessions]);
+
+  const exportableSessions = useMemo(
+    () => sorted.filter((s) => !pastIds.has(s.id)),
+    [sorted, pastIds],
+  );
+
+  const exportSelectedSessions = useMemo(
+    () => exportableSessions.filter((s) => exportSelectedIds.includes(s.id)),
+    [exportableSessions, exportSelectedIds],
+  );
+
+  const exportAllSelected = useMemo(
+    () => exportableSessions.length > 0 && exportableSessions.every((s) => exportSelectedIds.includes(s.id)),
+    [exportableSessions, exportSelectedIds],
+  );
+
+  const exportText = useMemo(() => itineraryText(exportSelectedSessions), [exportSelectedSessions]);
 
   return (
     <section className="space-y-4 pb-24 md:pb-0">
@@ -198,7 +238,15 @@ export function MyPlanTab({
           {liveSessions.length > 0 ? (
             <div className="space-y-3">
               <SectionHeading>Live now</SectionHeading>
-              {liveSessions.map(renderSessionWithConflict)}
+              {liveSessions.map((session) => (
+                <SessionRow
+                  key={session.id}
+                  session={session}
+                  overlaps={conflictLookup[session.id] ?? EMPTY_OVERLAPS}
+                  now={now}
+                  onRemove={onRemove}
+                />
+              ))}
             </div>
           ) : null}
 
@@ -208,7 +256,15 @@ export function MyPlanTab({
               {Object.entries(upcomingGrouped).map(([day, sessions]) => (
                 <div key={day} className="space-y-3">
                   <p className="px-1 text-xs text-zinc-500">{day}</p>
-                  {sessions.map(renderSessionWithConflict)}
+                  {sessions.map((session) => (
+                    <SessionRow
+                      key={session.id}
+                      session={session}
+                      overlaps={conflictLookup[session.id] ?? EMPTY_OVERLAPS}
+                      now={now}
+                      onRemove={onRemove}
+                    />
+                  ))}
                 </div>
               ))}
             </div>
@@ -221,7 +277,15 @@ export function MyPlanTab({
               {Object.entries(pastGrouped).map(([day, sessions]) => (
                 <div key={day} className="space-y-3">
                   <p className="px-1 text-xs text-zinc-500">{day}</p>
-                  {sessions.map(renderSessionWithConflict)}
+                  {sessions.map((session) => (
+                    <SessionRow
+                      key={session.id}
+                      session={session}
+                      overlaps={conflictLookup[session.id] ?? EMPTY_OVERLAPS}
+                      now={now}
+                      onRemove={onRemove}
+                    />
+                  ))}
                 </div>
               ))}
             </div>
